@@ -6,7 +6,7 @@ create table if not exists public.services (
   slug text not null unique,
   name text not null,
   description text not null default '',
-  duration_minutes integer not null check (duration_minutes between 15 and 240 and duration_minutes % 15 = 0),
+  duration_minutes integer not null check (duration_minutes between 15 and 240),
   price_kgs integer not null check (price_kgs >= 0),
   active boolean not null default true,
   sort_order smallint not null default 0,
@@ -151,7 +151,7 @@ begin
 
   return query
   with candidates as (
-    select p_service_date + ticks as local_start
+    select ticks as local_start
     from generate_series(
       p_service_date + v_open,
       p_service_date + v_close - make_interval(mins => v_duration),
@@ -197,6 +197,9 @@ declare
   v_local_start timestamp;
 begin
   if p_submission_id is null then raise exception 'invalid_submission' using errcode = '22023'; end if;
+  -- Serialize retries with the same submission ID so concurrent duplicate
+  -- submissions return the existing booking instead of a unique-key error.
+  perform pg_advisory_xact_lock(hashtextextended(p_submission_id::text, 0));
   if p_first_name is null or char_length(btrim(p_first_name)) not between 1 and 80
      or p_last_name is null or char_length(btrim(p_last_name)) not between 1 and 100
      or p_phone is null or p_phone !~ '^\+?[0-9 ()-]{8,24}$'

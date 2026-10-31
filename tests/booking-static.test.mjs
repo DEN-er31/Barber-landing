@@ -52,7 +52,8 @@ test('administrator UI has no sign-up and handles booking and schedule managemen
 });
 
 test('public config has no secret key and the design adapts to phones', () => {
-  assert.match(config, /publishableKey: ""/);
+  assert.match(config, /url: "https:\/\/oewuzjvygupjdsyxsfio\.supabase\.co"/);
+  assert.match(config, /publishableKey: "sb_publishable_[A-Za-z0-9_-]+"/);
   assert.doesNotMatch(config, /service_role|secretKey|sb_secret_/i);
   assert.match(bookingCss, /@media\(max-width:550px\)/);
   assert.match(styles, /@media\(max-width:700px\)/);

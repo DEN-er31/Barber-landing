@@ -44,7 +44,21 @@ async function sha256(value: string): Promise<string> {
 }
 
 export async function allowRate(client: SupabaseClient, request: Request, limit: number, windowSeconds: number): Promise<boolean> {
-  const pepper = Deno.env.get('RATE_LIMIT_PEPPER');
+  // Supabase injects the server-only project secret into Edge Functions. Use a
+  // namespaced derivation as a safe fallback so rate limiting stays enabled
+  // before an optional, independently rotated RATE_LIMIT_PEPPER is configured.
+  let pepper = Deno.env.get('RATE_LIMIT_PEPPER');
+  if (!pepper) {
+    const secretKeys = Deno.env.get('SUPABASE_SECRET_KEYS');
+    if (secretKeys) {
+      try {
+        const parsed = JSON.parse(secretKeys);
+        if (typeof parsed.default === 'string') pepper = `blackwood-rate-limit-v1:${parsed.default}`;
+      } catch { /* fail closed when server secrets are unavailable */ }
+    }
+    const legacySecret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!pepper && legacySecret) pepper = `blackwood-rate-limit-v1:${legacySecret}`;
+  }
   if (!pepper) return false;
   const forwarded = request.headers.get('cf-connecting-ip')
     || request.headers.get('x-forwarded-for')?.split(',').at(-1)?.trim()
