@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#171715" />
+  <title>Администрирование — BLACKWOOD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./admin.css" />
+</head>
+<body class="admin-body">
+  <header class="admin-header"><a class="brand" href="./index.html"><span class="brand-mark">B<span>·</span></span><span class="brand-name">BLACKWOOD<small>BARBERSHOP</small></span></a><span>ПАНЕЛЬ УПРАВЛЕНИЯ</span></header>
+  <main class="admin-main">
+    <section class="admin-login" id="admin-login">
+      <div class="section-kicker">ЗАКРЫТЫЙ ДОСТУП</div><h1>Вход<br/><em>администратора.</em></h1>
+      <p>Войти могут только пользователи Supabase Auth, которым администратор назначил роль <code>booking_admin</code>. Регистрации клиентов здесь нет.</p>
+      <div class="admin-message" id="admin-login-message" role="status"></div>
+      <form id="admin-login-form"><label>EMAIL<input type="email" name="email" autocomplete="username" required /></label><label>ПАРОЛЬ<input type="password" name="password" autocomplete="current-password" required /></label><button class="button button-cream" id="admin-login-button">Войти <span>↗</span></button></form>
+    </section>
+    <section id="admin-panel" hidden>
+      <div class="admin-title-row"><div><div class="section-kicker">BLACKWOOD / УПРАВЛЕНИЕ</div><h1>Рабочий день.</h1></div><button class="button button-quiet" id="admin-signout">Выйти</button></div>
+      <div class="admin-message" id="admin-message" role="status"></div>
+      <section class="admin-card"><div class="admin-card-heading"><div><div class="section-kicker">01 / ЗАПИСИ</div><h2>Бронирования</h2></div><button class="button button-quiet" id="refresh-bookings">Обновить ↻</button></div><div class="admin-table-wrap"><table><thead><tr><th>ВИЗИТ</th><th>КЛИЕНТ</th><th>УСЛУГА / МАСТЕР</th><th>СТАТУС</th><th></th></tr></thead><tbody id="appointments-body"></tbody></table></div></section>
+      <div class="admin-grid">
+        <section class="admin-card"><div class="section-kicker">02 / СПЕЦИАЛИСТЫ</div><h2>Команда</h2><form id="new-barber-form" class="admin-form"><label>Имя специалиста<input name="display_name" maxlength="80" required /></label><label>Короткое описание<input name="bio" maxlength="160" /></label><button class="button button-cream">Добавить специалиста</button></form><div id="barbers-list" class="barber-admin-list"></div></section>
+        <section class="admin-card"><div class="section-kicker">03 / НЕДЕЛЬНЫЙ ГРАФИК</div><h2>Расписание мастера</h2><form id="weekly-form" class="admin-form"><label>Специалист<select name="barber_id" required></select></label><label>День недели<select name="weekday"><option value="1">Понедельник</option><option value="2">Вторник</option><option value="3">Среда</option><option value="4">Четверг</option><option value="5">Пятница</option><option value="6">Суббота</option><option value="7">Воскресенье</option></select></label><label class="check-row"><input name="is_open" type="checkbox" checked /> Рабочий день</label><div class="time-pair"><label>ОТКРЫТИЕ<input type="time" name="opens_at" value="10:00" /></label><label>ЗАКРЫТИЕ<input type="time" name="closes_at" value="22:00" /></label></div><button class="button button-cream">Сохранить график</button></form><hr/><div class="section-kicker">ИСКЛЮЧЕНИЕ НА ДАТУ</div><form id="override-form" class="admin-form"><label>Специалист<select name="barber_id" required></select></label><label>Дата<input type="date" name="service_date" required /></label><label class="check-row"><input name="is_closed" type="checkbox" /> Выходной</label><div class="time-pair"><label>ОТКРЫТИЕ<input type="time" name="opens_at" value="10:00" /></label><label>ЗАКРЫТИЕ<input type="time" name="closes_at" value="22:00" /></label></div><label>Заметка<input name="note" maxlength="160" /></label><div class="admin-action-row"><button class="button button-outline">Сохранить исключение</button><button class="admin-small-button" type="button" id="delete-override">Удалить исключение</button></div></form></section>
+      </div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./booking-config.js"></script>
+  <script src="./admin.js"></script>
+</body>
+</html>

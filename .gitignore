@@ -1,0 +1,18 @@
+# Supabase local runtime and credentials
+supabase/functions/.env
+supabase/.temp/
+supabase/.branches/
+
+# Local environment files (keep examples only)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Private keys and local credential files
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.*

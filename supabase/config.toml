@@ -1,0 +1,7 @@
+project_id = "blackwood-booking"
+
+[functions.availability]
+verify_jwt = false
+
+[functions.create-booking]
+verify_jwt = false
