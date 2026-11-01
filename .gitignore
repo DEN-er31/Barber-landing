@@ -16,3 +16,4 @@ supabase/.branches/
 *.pfx
 credentials.json
 secrets.*
+.vercel
