@@ -14,6 +14,8 @@
   if (!dialog) return;
   const serviceRoot = document.querySelector('#service-choices');
   const barberRoot = document.querySelector('#barber-choices');
+  const customerInputs = [...document.querySelectorAll('.customer-fields input')];
+  const customerNext = document.querySelector('[data-step="5"] .next-step');
   const dateInput = document.querySelector('#booking-date');
   const slotsRoot = document.querySelector('#time-slots');
   const alertBox = document.querySelector('#booking-alert');
@@ -47,6 +49,9 @@
   };
   function showAlert(message) { alertBox.textContent = message; alertBox.hidden = false; }
   function clearAlert() { alertBox.textContent = ''; alertBox.hidden = true; }
+  function updateCustomerNextButton() {
+    customerNext.disabled = customerInputs.some(input => !input.checkValidity());
+  }
   function apiHeaders() { return { apikey: publishableKey, Authorization: `Bearer ${publishableKey}`, 'Content-Type': 'application/json' }; }
   async function endpoint(name, options = {}) {
     if (!backendReady) throw new Error('Онлайн-запись пока не подключена. Добавьте URL и публичный ключ Supabase в dist/booking-config.js, примените миграцию и настройте Edge Functions.');
@@ -189,6 +194,7 @@
     selection.date = dateInput.value; selection.time = '';
     document.querySelector('[data-step="3"] .next-step').disabled = !selection.date;
   });
+  customerInputs.forEach(input => input.addEventListener('input', updateCustomerNextButton));
   document.querySelectorAll('.prev-step').forEach(button => button.addEventListener('click', () => showStep(Math.max(1, currentStep - 1))));
   document.querySelectorAll('.next-step').forEach(button => button.addEventListener('click', async () => {
     if (currentStep === 3) {

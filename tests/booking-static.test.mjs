@@ -20,6 +20,8 @@ test('all booking CTAs open the same accessible six-step dialog', () => {
   assert.match(html, /<dialog class="booking-dialog"/);
   for (let i = 1; i <= 6; i++) assert.match(html, new RegExp(`data-step="${i}"`));
   for (const field of ['firstName', 'lastName', 'phone', 'email']) assert.match(html, new RegExp(`name="${field}"`));
+  assert.match(booking, /customerInputs\.forEach\(input => input\.addEventListener\('input', updateCustomerNextButton\)\)/);
+  assert.match(booking, /customerNext\.disabled = customerInputs\.some\(input => !input\.checkValidity\(\)\)/);
 });
 
 test('booking page contains only demonstration staff and expected service prices', () => {
