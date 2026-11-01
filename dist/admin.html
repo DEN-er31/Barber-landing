@@ -9,29 +9,170 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
-  <link rel="stylesheet" href="./admin.css" />
+  <link rel="stylesheet" href="./admin.css?v=admin-ux-2" />
 </head>
 <body class="admin-body">
-  <header class="admin-header"><a class="brand" href="./index.html"><span class="brand-mark">B<span>·</span></span><span class="brand-name">BLACKWOOD<small>BARBERSHOP</small></span></a><span>ПАНЕЛЬ УПРАВЛЕНИЯ</span></header>
+  <header class="admin-header">
+    <a class="brand" href="./index.html" aria-label="BLACKWOOD, на главную"><span class="brand-mark">B<span>·</span></span><span class="brand-name">BLACKWOOD<small>BARBERSHOP</small></span></a>
+    <span class="admin-header-label">ЗАЩИЩЁННАЯ ПАНЕЛЬ</span>
+    <a class="admin-back-link" href="./index.html">На сайт ↗</a>
+  </header>
+
   <main class="admin-main">
-    <section class="admin-login" id="admin-login">
-      <div class="section-kicker">ЗАКРЫТЫЙ ДОСТУП</div><h1>Вход<br/><em>администратора.</em></h1>
-      <p>Войти могут только пользователи Supabase Auth, которым администратор назначил роль <code>booking_admin</code>. Регистрации клиентов здесь нет.</p>
-      <div class="admin-message" id="admin-login-message" role="status"></div>
-      <form id="admin-login-form"><label>EMAIL<input type="email" name="email" autocomplete="username" required /></label><label>ПАРОЛЬ<input type="password" name="password" autocomplete="current-password" required /></label><button class="button button-cream" id="admin-login-button">Войти <span>↗</span></button></form>
+    <section class="admin-login" id="admin-login" aria-labelledby="login-title">
+      <div class="section-kicker">ЗАКРЫТЫЙ ДОСТУП · БИШКЕК</div>
+      <h1 id="login-title">Рабочее<br /><em>пространство.</em></h1>
+      <p>Войти могут только сотрудники с ролью <code>booking_admin</code> в защищённом <code>app_metadata</code>. Публичной регистрации нет.</p>
+      <div class="admin-message" id="admin-login-message" role="status" aria-live="polite"></div>
+      <form id="admin-login-form" autocomplete="on">
+        <label for="admin-email">EMAIL</label><input id="admin-email" type="email" name="email" autocomplete="username" required />
+        <label for="admin-password">ПАРОЛЬ</label><input id="admin-password" type="password" name="password" autocomplete="current-password" required />
+        <button class="button button-cream" id="admin-login-button" type="submit">Войти в панель <span>↗</span></button>
+      </form>
     </section>
+
     <section id="admin-panel" hidden>
-      <div class="admin-title-row"><div><div class="section-kicker">BLACKWOOD / УПРАВЛЕНИЕ</div><h1>Рабочий день.</h1></div><button class="button button-quiet" id="admin-signout">Выйти</button></div>
-      <div class="admin-message" id="admin-message" role="status"></div>
-      <section class="admin-card"><div class="admin-card-heading"><div><div class="section-kicker">01 / ЗАПИСИ</div><h2>Бронирования</h2></div><button class="button button-quiet" id="refresh-bookings">Обновить ↻</button></div><div class="admin-table-wrap"><table><thead><tr><th>ВИЗИТ</th><th>КЛИЕНТ</th><th>УСЛУГА / МАСТЕР</th><th>СТАТУС</th><th></th></tr></thead><tbody id="appointments-body"></tbody></table></div></section>
-      <div class="admin-grid">
-        <section class="admin-card"><div class="section-kicker">02 / СПЕЦИАЛИСТЫ</div><h2>Команда</h2><form id="new-barber-form" class="admin-form"><label>Имя специалиста<input name="display_name" maxlength="80" required /></label><label>Короткое описание<input name="bio" maxlength="160" /></label><button class="button button-cream">Добавить специалиста</button></form><div id="barbers-list" class="barber-admin-list"></div></section>
-        <section class="admin-card"><div class="section-kicker">03 / НЕДЕЛЬНЫЙ ГРАФИК</div><h2>Расписание мастера</h2><form id="weekly-form" class="admin-form"><label>Специалист<select name="barber_id" required></select></label><label>День недели<select name="weekday"><option value="1">Понедельник</option><option value="2">Вторник</option><option value="3">Среда</option><option value="4">Четверг</option><option value="5">Пятница</option><option value="6">Суббота</option><option value="7">Воскресенье</option></select></label><label class="check-row"><input name="is_open" type="checkbox" checked /> Рабочий день</label><div class="time-pair"><label>ОТКРЫТИЕ<input type="time" name="opens_at" value="10:00" /></label><label>ЗАКРЫТИЕ<input type="time" name="closes_at" value="22:00" /></label></div><button class="button button-cream">Сохранить график</button></form><hr/><div class="section-kicker">ИСКЛЮЧЕНИЕ НА ДАТУ</div><form id="override-form" class="admin-form"><label>Специалист<select name="barber_id" required></select></label><label>Дата<input type="date" name="service_date" required /></label><label class="check-row"><input name="is_closed" type="checkbox" /> Выходной</label><div class="time-pair"><label>ОТКРЫТИЕ<input type="time" name="opens_at" value="10:00" /></label><label>ЗАКРЫТИЕ<input type="time" name="closes_at" value="22:00" /></label></div><label>Заметка<input name="note" maxlength="160" /></label><div class="admin-action-row"><button class="button button-outline">Сохранить исключение</button><button class="admin-small-button" type="button" id="delete-override">Удалить исключение</button></div></form></section>
+      <aside class="admin-sidebar" aria-label="Навигация админ-панели">
+        <div class="sidebar-caption">ПАНЕЛЬ УПРАВЛЕНИЯ</div>
+        <button class="sidebar-menu-toggle" id="admin-mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="admin-navigation"><span>Разделы</span><span aria-hidden="true">⌄</span></button>
+        <nav class="admin-navigation" id="admin-navigation" aria-label="Разделы">
+          <a href="#overview" data-admin-section="overview"><span aria-hidden="true">◫</span>Обзор</a>
+          <a href="#bookings" data-admin-section="bookings"><span aria-hidden="true">▤</span>Записи</a>
+          <a href="#calendar" data-admin-section="calendar"><span aria-hidden="true">▦</span>Календарь</a>
+          <a href="#specialists" data-admin-section="specialists"><span aria-hidden="true">♙</span>Специалисты</a>
+          <a href="#schedule" data-admin-section="schedule"><span aria-hidden="true">◷</span>Расписание</a>
+          <a href="#services" data-admin-section="services"><span aria-hidden="true">◇</span>Услуги</a>
+          <a href="#settings" data-admin-section="settings"><span aria-hidden="true">⚙</span>Настройки</a>
+        </nav>
+        <div class="sidebar-account"><span class="account-avatar" id="admin-avatar">B</span><span><strong id="sidebar-identity">Администратор</strong><small>Администратор BLACKWOOD</small></span></div>
+      </aside>
+      <div class="admin-title-row" id="overview">
+        <div><div class="section-kicker">BLACKWOOD / ОБЗОР · БИШКЕК</div><h1>Рабочий день.</h1><p class="admin-identity" id="admin-identity"></p></div>
+        <button class="button button-cream new-appointment-button" id="new-appointment" type="button">+ Новая запись</button>
       </div>
+      <div class="admin-message" id="admin-message" role="status" aria-live="polite"></div>
+
+      <section class="dashboard-metrics" aria-label="Сводка">
+        <article class="metric-card"><span class="section-kicker">СЕГОДНЯ · ПОДТВЕРЖДЕНО</span><strong id="metric-today">—</strong><span id="metric-today-note">записей</span></article>
+        <article class="metric-card metric-card-accent"><span class="section-kicker">БЛИЖАЙШАЯ ЗАПИСЬ</span><strong class="metric-next" id="metric-next">—</strong><span id="metric-next-note">пока нет ближайших визитов</span></article>
+        <article class="metric-card"><span class="section-kicker">АКТИВНЫХ УСЛУГ</span><strong id="metric-services">—</strong><span>в публичном меню</span></article>
+      </section>
+
+      <section class="admin-card upcoming-card" id="bookings" aria-labelledby="bookings-heading">
+        <div class="admin-card-heading"><div><div class="section-kicker">01 / ЗАПИСИ</div><h2 id="bookings-heading">Ближайшие визиты</h2></div><button class="button button-quiet" id="refresh-bookings" type="button">Обновить ↻</button></div>
+        <div class="booking-list-toolbar"><p>Ближайшие подтверждённые записи</p><label class="search-control"><span class="sr-only">Поиск по клиентам</span><span aria-hidden="true">⌕</span><input id="booking-search" type="search" placeholder="Имя или телефон" autocomplete="off" /></label></div>
+        <div class="upcoming-list" id="upcoming-list" aria-live="polite"></div>
+      </section>
+
+      <div class="admin-columns" id="calendar">
+        <section class="admin-card calendar-card" aria-labelledby="calendar-heading">
+          <div class="admin-card-heading calendar-heading">
+            <div><div class="section-kicker">02 / КАЛЕНДАРЬ</div><h2 id="calendar-heading">Записи по датам</h2></div>
+            <label class="filter-control"><span>МАСТЕР</span><select id="calendar-barber-filter"><option value="all">Все специалисты</option></select></label>
+          </div>
+          <div class="calendar-toolbar">
+            <button class="icon-button" id="calendar-prev" type="button" aria-label="Предыдущий месяц">←</button>
+            <h3 id="calendar-month-label">—</h3>
+            <button class="icon-button" id="calendar-next" type="button" aria-label="Следующий месяц">→</button>
+            <button class="today-button" id="calendar-today" type="button">Сегодня</button>
+          </div>
+          <div class="calendar-weekdays" aria-hidden="true"><span>ПН</span><span>ВТ</span><span>СР</span><span>ЧТ</span><span>ПТ</span><span>СБ</span><span>ВС</span></div>
+          <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Календарь записей"></div>
+          <div class="calendar-legend"><span><i></i> Есть записи</span><span><i class="legend-cancelled"></i> Отменена</span></div>
+        </section>
+
+        <section class="admin-card day-card" aria-labelledby="day-heading">
+          <div class="admin-card-heading day-heading"><div><div class="section-kicker">ВЫБРАННАЯ ДАТА</div><h2 id="day-heading">Записи</h2></div><label class="status-filter"><span>СТАТУС</span><select id="booking-status-filter"><option value="all">Все</option><option value="confirmed">Подтверждена</option><option value="cancelled">Отменена</option></select></label></div>
+          <div class="day-bookings" id="day-bookings" aria-live="polite"></div>
+        </section>
+      </div>
+
+      <div class="admin-grid admin-management-grid">
+        <section class="admin-card" id="specialists">
+          <div class="section-kicker">03 / КОМАНДА</div><h2>Специалисты</h2>
+          <p class="section-description">Команда барберов и их статус в публичном расписании.</p>
+          <form id="new-barber-form" class="admin-form">
+            <label for="barber-name">Имя специалиста</label><input id="barber-name" name="display_name" maxlength="80" placeholder="Имя и фамилия" required />
+            <label for="barber-bio">Короткое описание</label><input id="barber-bio" name="bio" maxlength="160" placeholder="Специализация или заметка" />
+            <button class="button button-cream" type="submit">Добавить специалиста ↗</button>
+          </form>
+          <div id="barbers-list" class="barber-admin-list"></div>
+        </section>
+
+        <section class="admin-card schedule-card" id="schedule">
+          <div class="section-kicker">04 / ГРАФИК</div><h2>Рабочие часы</h2>
+          <p class="section-description">Настройте регулярную неделю, затем добавьте выходные или особые часы.</p>
+          <form id="weekly-form" class="admin-form">
+            <label for="weekly-barber">Специалист</label><select id="weekly-barber" name="barber_id" required></select>
+            <label for="weekly-weekday">День недели</label><select id="weekly-weekday" name="weekday"><option value="1">Понедельник</option><option value="2">Вторник</option><option value="3">Среда</option><option value="4">Четверг</option><option value="5">Пятница</option><option value="6">Суббота</option><option value="7">Воскресенье</option></select>
+            <label class="check-row"><input name="is_open" type="checkbox" checked /> Рабочий день</label>
+            <div class="time-pair"><label>ОТКРЫТИЕ<input type="time" name="opens_at" value="10:00" /></label><label>ЗАКРЫТИЕ<input type="time" name="closes_at" value="22:00" /></label></div>
+            <button class="button button-cream" type="submit">Сохранить график</button>
+          </form>
+          <div id="weekly-schedule-list" class="weekly-schedule-list"></div>
+          <hr />
+          <div class="section-kicker">ОТПУСК · ВЫХОДНЫЕ · ОСОБЫЕ ЧАСЫ</div>
+          <p class="form-note">Выбери специалиста и период. Закрытый период добавит выходной на каждый день, открытый — установит особые часы.</p>
+          <form id="override-form" class="admin-form">
+            <label for="override-barber">Специалист</label><select id="override-barber" name="barber_id" required></select>
+            <div class="time-pair"><label>С ДАТЫ<input type="date" name="start_date" required /></label><label>ПО ДАТУ ВКЛЮЧИТЕЛЬНО<input type="date" name="end_date" required /></label></div>
+            <label class="check-row"><input name="is_closed" type="checkbox" checked /> Выходной / отпуск</label>
+            <div class="time-pair"><label>ОТКРЫТИЕ<input type="time" name="opens_at" value="10:00" /></label><label>ЗАКРЫТИЕ<input type="time" name="closes_at" value="22:00" /></label></div>
+            <label for="override-note">Заметка</label><input id="override-note" name="note" maxlength="160" placeholder="Например, отпуск" />
+            <button class="button button-outline" type="submit">Сохранить период</button>
+          </form>
+          <div id="overrides-list" class="overrides-list"></div>
+        </section>
+      </div>
+
+      <section class="admin-card services-card" id="services">
+        <div class="admin-card-heading"><div><div class="section-kicker">05 / ПРАЙС</div><h2>Услуги и цены</h2></div></div>
+        <p class="section-description">Параметры здесь синхронизированы с каталогом онлайн-записи.</p>
+        <form id="service-form" class="service-form">
+          <input name="service_id" type="hidden" />
+          <label>Название<input name="name" maxlength="100" required /></label>
+          <label>Описание<input name="description" maxlength="300" /></label>
+          <div class="time-pair"><label>ЦЕНА · СОМ<input name="price_kgs" type="number" min="0" step="50" required /></label><label>ДЛИТЕЛЬНОСТЬ · МИН<input name="duration_minutes" type="number" min="15" max="240" step="5" required /></label></div>
+          <div class="service-form-actions"><button class="button button-cream" id="save-service-button" type="submit">Добавить услугу</button><button class="admin-small-button" id="cancel-service-edit" type="button" hidden>Отменить редактирование</button></div>
+        </form>
+        <div id="services-list" class="services-admin-list"></div>
+      </section>
+      <section class="admin-card settings-card" id="settings" aria-labelledby="settings-heading">
+        <div><div class="section-kicker">06 / ДОСТУП</div><h2 id="settings-heading">Настройки доступа</h2><p class="section-description">Вход доступен сотрудникам с ролью <code>booking_admin</code> в защищённом <code>app_metadata</code>. Публичная регистрация не выдаёт административные права.</p></div>
+        <div class="settings-account"><span class="account-avatar">B</span><span><strong id="settings-identity">Администратор</strong><small>Подключение защищено Supabase Auth и RLS</small></span><button class="button button-quiet" id="admin-signout" type="button">Выйти из аккаунта ↗</button></div>
+      </section>
     </section>
   </main>
+  <dialog class="manual-booking-dialog" id="manual-booking-dialog" aria-labelledby="manual-booking-title">
+    <form id="manual-booking-form" class="manual-booking-form">
+      <div class="manual-booking-heading"><div><div class="section-kicker">BLACKWOOD / АДМИНИСТРАТОР</div><h2 id="manual-booking-title">Новая запись.</h2></div><button class="icon-button" id="manual-booking-close" type="button" aria-label="Закрыть">×</button></div>
+      <p class="form-note">Время загружается из общего расписания и сразу резервируется для сайта.</p>
+      <div class="manual-booking-fields">
+        <label>ИМЯ<input name="first_name" autocomplete="given-name" maxlength="80" required /></label>
+        <label>ФАМИЛИЯ<input name="last_name" autocomplete="family-name" maxlength="100" required /></label>
+        <label>ТЕЛЕФОН<input name="phone" type="tel" autocomplete="tel" maxlength="24" minlength="8" required /></label>
+        <label>EMAIL · НЕОБЯЗАТЕЛЬНО<input name="email" type="email" autocomplete="email" maxlength="254" /></label>
+        <label>УСЛУГА<select name="service_id" required><option value="">Выберите услугу</option></select></label>
+        <label>СПЕЦИАЛИСТ<select name="barber_id" required><option value="">Выберите специалиста</option></select></label>
+        <label>ДАТА ПОСЕЩЕНИЯ<input name="service_date" type="date" required /></label>
+        <label>СВОБОДНОЕ ВРЕМЯ<select name="starts_at" required disabled><option value="">Сначала выберите дату</option></select></label>
+        <label class="manual-note-field">КОММЕНТАРИЙ · НЕОБЯЗАТЕЛЬНО<textarea name="admin_note" rows="3" maxlength="500" placeholder="Пожелания клиента или заметка для команды"></textarea></label>
+      </div>
+      <div class="manual-booking-message" id="manual-booking-message" role="status" aria-live="polite"></div>
+      <div class="manual-booking-actions"><button class="admin-small-button" id="manual-booking-cancel" type="button">Отмена</button><button class="button button-cream" id="manual-booking-submit" type="submit" disabled>Создать запись ↗</button></div>
+    </form>
+  </dialog>
+  <dialog class="manual-booking-dialog" id="barber-edit-dialog" aria-labelledby="barber-edit-title">
+    <form id="barber-edit-form" class="manual-booking-form">
+      <div class="manual-booking-heading"><div><div class="section-kicker">КОМАНДА / ПРОФИЛЬ</div><h2 id="barber-edit-title">Изменить специалиста.</h2></div><button class="icon-button" id="barber-edit-close" type="button" aria-label="Закрыть">×</button></div>
+      <input name="barber_id" type="hidden" />
+      <div class="manual-booking-fields barber-edit-fields"><label>ИМЯ И ФАМИЛИЯ<input name="display_name" maxlength="80" required /></label><label class="manual-note-field">ОПИСАНИЕ ИЛИ ЗАМЕТКА<input name="bio" maxlength="160" /></label></div>
+      <div class="manual-booking-message" id="barber-edit-message" role="status" aria-live="polite"></div>
+      <div class="manual-booking-actions"><button class="admin-small-button" id="barber-edit-cancel" type="button">Отмена</button><button class="button button-cream" type="submit">Сохранить ↗</button></div>
+    </form>
+  </dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./booking-config.js"></script>
-  <script src="./admin.js"></script>
+  <script src="./admin.js?v=admin-ux-2"></script>
 </body>
 </html>
