@@ -1,20 +1,20 @@
 # BLACKWOOD booking system
 
-This repository remains a buildless static site. The booking interface is under `dist/`; Supabase database and Edge Function source lives under `supabase/`. It contains a browser-safe Supabase publishable key, but no secret/service-role key, customer booking, or real staff record.
+This repository remains a buildless static site. The booking interface is under `dist/`; Supabase database and Edge Function source lives under `supabase/`. It contains a browser-safe Supabase publishable key, but no secret/service-role key or real staff record.
 
 ## Connected Supabase project
 
-The existing project `oewuzjvygupjdsyxsfio` is connected. The database migrations are applied and the `availability` and `create-booking` Edge Functions are deployed. The database currently has three active services, three demonstration barber profiles, 21 demo weekly schedule rows, and zero bookings. Demonstration staff/schedules are not confirmed real availability.
+The existing project `oewuzjvygupjdsyxsfio` is connected. The database migrations are applied and the `availability` and `create-booking` Edge Functions are deployed. The database has three active services, three demonstration barber profiles, 21 demo weekly schedule rows, and one cancelled QA booking from an end-to-end integration check. Demonstration staff/schedules are not confirmed real availability.
 
 The browser URL and publishable key are configured in `dist/booking-config.js`. Secret keys are never placed in browser code.
 
-## Manual setup still required before accepting bookings
+## Operational setup
 
 1. Revoke/rotate the Supabase secret key that was pasted into chat. Use Supabase Dashboard → **Project Settings → API Keys**. The key must never be saved in this repository or sent in chat. Supabase injects its server-only secret-key map into Edge Functions; the functions use that runtime value, with the legacy service-role variable as a fallback.
-2. Create a Cloudflare Turnstile widget for the actual website hostname. Set `TURNSTILE_SECRET_KEY` and `TURNSTILE_ALLOWED_HOSTNAMES` in Supabase **Project Settings → Edge Functions → Secrets**. Add the widget's public site key to `turnstileSiteKey` in `dist/booking-config.js`. Until those values are set, booking submission remains safely disabled/rejected. `RATE_LIMIT_PEPPER` may be set to an independently generated secret; otherwise the function derives a namespaced rate-limit key from Supabase's server-only project secret.
+2. Cloudflare Turnstile uses the public site key in `dist/booking-config.js` and the server-only `TURNSTILE_SECRET_KEY` in Supabase Edge Function secrets. The deployed function allowlists `blackwood-barbershop.rustycurl.chatgpt.site` by default; set `TURNSTILE_ALLOWED_HOSTNAMES` only when changing or adding the production hostname. `RATE_LIMIT_PEPPER` may be set to an independently generated secret; otherwise the function derives a namespaced rate-limit key from Supabase's server-only project secret.
 3. In Supabase Auth, create an administrator user. Assign `app_metadata.role = "booking_admin"` through the Dashboard or a trusted admin-only server tool. Do not use editable `user_metadata` for this role. Open `/admin.html` and sign in. There is no customer sign-up flow.
 4. Replace or edit the demonstration barber profiles and verify their weekly schedules and date overrides in the admin panel before accepting real bookings.
-5. Deploy the updated `dist/` directory to the existing website host after configuring Turnstile. The public website itself was not redeployed as part of this change.
+5. The current public Site version has been deployed. Deploy again after making future changes to the static files in `dist/`.
 
 ## Security and booking behavior
 
@@ -37,7 +37,7 @@ Run the static acceptance checks with:
 node --test tests/booking-static.test.mjs
 ```
 
-The live Supabase migration, Edge Function deployment, seeded rows, timezone conversion, and representative available slots were checked through Supabase. Creating a real booking was not tested because Turnstile credentials and a real booking request are not configured. Database tests can also be run locally with the Supabase CLI:
+The live Supabase migration, Edge Function deployment, seeded rows, timezone conversion, and representative available slots were checked through Supabase. A public-site end-to-end test passed Turnstile, saved a QA appointment, confirmed the occupied and overlapping slots disappeared, then cancelled the QA record and confirmed those slots returned. No customer-facing appointment remains active. Database tests can also be run locally with the Supabase CLI:
 
 ```sh
 supabase start

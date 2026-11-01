@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [html, booking, adminHtml, admin, sql, availability, createBooking, config, bookingCss, styles] = await Promise.all([
+const [html, booking, adminHtml, admin, sql, availability, createBooking, config, bookingCss, styles, sharedHttp] = await Promise.all([
   readFile(new URL('../dist/index.html', import.meta.url), 'utf8'),
   readFile(new URL('../dist/booking.js', import.meta.url), 'utf8'),
   readFile(new URL('../dist/admin.html', import.meta.url), 'utf8'),
@@ -12,11 +12,13 @@ const [html, booking, adminHtml, admin, sql, availability, createBooking, config
   readFile(new URL('../supabase/functions/create-booking/index.ts', import.meta.url), 'utf8'),
   readFile(new URL('../dist/booking-config.js', import.meta.url), 'utf8'),
   readFile(new URL('../dist/booking.css', import.meta.url), 'utf8'),
-  readFile(new URL('../dist/styles.css', import.meta.url), 'utf8')
+  readFile(new URL('../dist/styles.css', import.meta.url), 'utf8'),
+  readFile(new URL('../supabase/functions/_shared/http.ts', import.meta.url), 'utf8')
 ]);
 
 test('all booking CTAs open the same accessible six-step dialog', () => {
   assert.ok((html.match(/js-booking-trigger/g) || []).length >= 4);
+  assert.match(html, /booking\.js\?v=7/);
   assert.match(html, /<dialog class="booking-dialog"/);
   for (let i = 1; i <= 6; i++) assert.match(html, new RegExp(`data-step="${i}"`));
   for (const field of ['firstName', 'lastName', 'phone', 'email']) assert.match(html, new RegExp(`name="${field}"`));
@@ -41,6 +43,17 @@ test('customer data is protected and conflicting appointments are rejected in Po
   assert.match(createBooking, /verifyTurnstile/);
   assert.match(createBooking, /allowRate/);
   assert.match(availability, /get_available_slots/);
+});
+
+test('public API rate limits are isolated by Edge Function endpoint', () => {
+  assert.match(sharedHttp, /const endpoint = new URL\(request\.url\)\.pathname/);
+  assert.match(sharedHttp, /blackwood-rate-limit-v2:\$\{endpoint\}:\$\{pepper\}:\$\{forwarded\}/);
+});
+
+test('Turnstile verifies only the configured or canonical production hostname', () => {
+  assert.match(sharedHttp, /TURNSTILE_ALLOWED_HOSTNAMES/);
+  assert.match(sharedHttp, /blackwood-barbershop\.rustycurl\.chatgpt\.site/);
+  assert.match(sharedHttp, /expected\.includes\(String\(result\.hostname \|\| ''\)\.toLowerCase\(\)\)/);
 });
 
 test('administrator UI has no sign-up and handles booking and schedule management', () => {

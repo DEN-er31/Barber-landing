@@ -63,7 +63,9 @@ export async function allowRate(client: SupabaseClient, request: Request, limit:
   const forwarded = request.headers.get('cf-connecting-ip')
     || request.headers.get('x-forwarded-for')?.split(',').at(-1)?.trim()
     || request.headers.get('x-real-ip') || 'unknown';
-  const keyHash = await sha256(`${pepper}:${forwarded}`);
+  // Keep separate function limits independent even when their time windows align.
+  const endpoint = new URL(request.url).pathname.split('/').filter(Boolean).at(-1) || 'unknown';
+  const keyHash = await sha256(`blackwood-rate-limit-v2:${endpoint}:${pepper}:${forwarded}`);
   const { data, error } = await client.rpc('consume_public_rate_limit', {
     p_key_hash: keyHash, p_window_seconds: windowSeconds, p_limit: limit
   });
@@ -84,8 +86,13 @@ export async function verifyTurnstile(token: unknown, request: Request): Promise
     if (!response.ok) return false;
     const result = await response.json();
     if (result.success !== true) return false;
-    const expected = (Deno.env.get('TURNSTILE_ALLOWED_HOSTNAMES') || '').split(',').map(x => x.trim()).filter(Boolean);
-    return expected.length > 0 && expected.includes(result.hostname);
+    // Keep the production hostname explicitly allowlisted when the optional
+    // override has not been configured in Supabase Edge Function secrets.
+    // Never trust the request Origin as the allowlist source.
+    const configured = Deno.env.get('TURNSTILE_ALLOWED_HOSTNAMES');
+    const expected = (configured || 'blackwood-barbershop.rustycurl.chatgpt.site')
+      .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+    return expected.includes(String(result.hostname || '').toLowerCase());
   } catch { return false; }
 }
 
