@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [html, booking, adminHtml, admin, sql, manualMigration, emailValidationMigration, manualTest, availability, createBooking, config, bookingCss, adminCss, styles, sharedHttp] = await Promise.all([
+const [html, booking, adminHtml, admin, sql, manualMigration, emailValidationMigration, manualTest, availability, createBooking, config, bookingCss, adminCss, styles, sharedHttp, deleteMigration] = await Promise.all([
   readFile(new URL('../dist/index.html', import.meta.url), 'utf8'),
   readFile(new URL('../dist/booking.js', import.meta.url), 'utf8'),
   readFile(new URL('../dist/admin.html', import.meta.url), 'utf8'),
@@ -17,7 +17,8 @@ const [html, booking, adminHtml, admin, sql, manualMigration, emailValidationMig
   readFile(new URL('../dist/booking.css', import.meta.url), 'utf8'),
   readFile(new URL('../dist/admin.css', import.meta.url), 'utf8'),
   readFile(new URL('../dist/styles.css', import.meta.url), 'utf8'),
-  readFile(new URL('../supabase/functions/_shared/http.ts', import.meta.url), 'utf8')
+  readFile(new URL('../supabase/functions/_shared/http.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../supabase/migrations/20261101150000_admin_delete_booking.sql', import.meta.url), 'utf8')
 ]);
 
 test('all booking CTAs open the same accessible six-step dialog', () => {
@@ -76,7 +77,7 @@ test('administrator UI has no sign-up and handles booking and schedule managemen
   assert.match(admin, /schedule_overrides/);
   assert.match(admin, /barbers/);
   assert.match(admin, /services/);
-  assert.match(admin, /data-cancel-appointment/);
+  assert.match(admin, /data-delete-appointment/);
   assert.match(admin, /customer_phone/);
   assert.match(admin, /IntersectionObserver/);
   assert.match(admin, /booking-search/);
@@ -90,6 +91,18 @@ test('administrator UI has no sign-up and handles booking and schedule managemen
   assert.match(sql, /create policy "booking admins manage appointments"[\s\S]*using \(public\.is_booking_admin\(\)\) with check \(public\.is_booking_admin\(\)\)/i);
   assert.match(sql, /create policy "booking admins manage services"[\s\S]*using \(public\.is_booking_admin\(\)\) with check \(public\.is_booking_admin\(\)\)/i);
   assert.doesNotMatch(sql, /raw_user_meta_data|user_metadata/i);
+});
+
+test('admin booking deletion is confirmed by an admin-only server RPC before refresh', () => {
+  assert.match(admin, /rpc\('admin_delete_booking', \{ p_booking_id: id \}\)/);
+  assert.match(admin, /if \(!data\?\.deleted \|\| data\.id !== id\)/);
+  assert.match(admin, /await loadAdminData\(\);\s*notify\(message, 'Запись удалена/);
+  assert.doesNotMatch(admin, /from\('appointments'\)\.update\(\{ status: 'cancelled'/);
+  assert.match(deleteMigration, /security invoker/i);
+  assert.match(deleteMigration, /auth\.uid\(\) is null or not public\.is_booking_admin\(\)/i);
+  assert.match(deleteMigration, /delete from public\.appointments[\s\S]*returning id into v_deleted_id/i);
+  assert.match(deleteMigration, /revoke all on function public\.admin_delete_booking\(uuid\) from public, anon/i);
+  assert.match(deleteMigration, /grant execute on function public\.admin_delete_booking\(uuid\) to authenticated/i);
 });
 
 test('admin manual bookings use shared availability, protected RPC and the existing appointment table', () => {

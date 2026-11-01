@@ -123,7 +123,7 @@
         <span class="appointment-source">${appointment.source === 'admin' ? 'Добавлена администратором' : 'Через сайт'}</span>
         ${appointment.admin_note ? `<span class="appointment-admin-note">Заметка: ${escapeHTML(appointment.admin_note)}</span>` : ''}</div>
       <div class="appointment-actions"><span class="admin-status ${cancelled ? 'cancelled' : ''}">${cancelled ? 'ОТМЕНЕНА' : 'ПОДТВЕРЖДЕНА'}</span>
-        ${!cancelled ? `<button class="admin-small-button" data-cancel-appointment="${escapeHTML(appointment.id)}" type="button">Отменить запись</button>` : ''}</div>
+        <button class="admin-small-button" data-delete-appointment="${escapeHTML(appointment.id)}" type="button">Удалить запись</button></div>
     </article>`;
   }
 
@@ -303,13 +303,20 @@
   function refreshCurrentMonth() {
     return fetchMonthAppointments().then(renderCalendar).catch(error => notify(message, failMessage(error)));
   }
-  async function cancelAppointment(id) {
-    if (!window.confirm('Отменить выбранную запись? Это освободит интервал для клиентов.')) return;
-    notify(message, 'Отменяем запись…');
-    const { error } = await client.from('appointments').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', id).eq('status', 'confirmed');
-    if (error) { notify(message, failMessage(error)); return; }
-    await loadAdminData();
-    notify(message, 'Запись отменена, время снова доступно для бронирования.');
+  async function deleteAppointment(id, button) {
+    if (!window.confirm('Удалить выбранную запись без возможности восстановления? Время станет доступно для клиентов.')) return;
+    button.disabled = true;
+    notify(message, 'Удаляем запись…');
+    try {
+      const { data, error } = await client.rpc('admin_delete_booking', { p_booking_id: id });
+      if (error) throw error;
+      if (!data?.deleted || data.id !== id) throw new Error('Сервер не подтвердил удаление записи.');
+      await loadAdminData();
+      notify(message, 'Запись удалена, время снова доступно для бронирования.');
+    } catch (error) {
+      button.disabled = false;
+      notify(message, failMessage(error));
+    }
   }
 
   const manualDialog = document.querySelector('#manual-booking-dialog');
@@ -672,8 +679,8 @@
 
   ['#upcoming-list', '#day-bookings'].forEach(selector => {
     document.querySelector(selector).addEventListener('click', event => {
-      const button = event.target.closest('[data-cancel-appointment]');
-      if (button) void cancelAppointment(button.dataset.cancelAppointment);
+      const button = event.target.closest('[data-delete-appointment]');
+      if (button) void deleteAppointment(button.dataset.deleteAppointment, button);
     });
   });
 })();
